@@ -1,11 +1,17 @@
-import { FC, useState } from 'react';
-import { Linking, Platform, StyleSheet } from 'react-native';
+import React, { FC, useEffect, useState } from 'react';
+import { Image, Linking, Platform, Pressable, StyleSheet, } from 'react-native';
 import Page from '../UI/Page';
 import FirstVisit from '../components/FirstVisit';
 import { requestImageReadWritePermission } from '../utils/permissions';
 import NeverAskPermissionAlert from '../components/NeverAskPermissionAlert';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
-import { saveImagesToLocalDir } from '../utils/file-handler';
+import { getLocalImages, LocalImage, saveImagesToLocalDir } from '../utils/file-handler';
+import AppText from '../UI/AppText';
+import GridView from '../UI/GridView';
+import Icon from "@react-native-vector-icons/entypo"
+import AppModal from '../components/AppModal';
+// import ImageOptions from '../components/ImageOptions';
+import ConfirmOptions from '../components/ConfirmOptions';
 
 interface Props { }
 
@@ -14,6 +20,11 @@ interface Props { }
 const Home: FC<Props> = () => {
     const [showPermissionAlert, setShowPermissionAlert] = useState(false);
     const [isNeverAsk, setIsNeverAsk] = useState(false);
+    const [isFirstVisit, setIsFirstVisit] = useState(false);
+    const [showImageOptions, setShowImageOptions] = useState(false);
+    const [isReady, setIsReady] = useState(false);
+    const [images, setImages] = useState<LocalImage[]>([])
+
     const handleOnCapturePress = async () => {
         try {
             if (Platform.OS === 'android') {
@@ -79,27 +90,123 @@ const Home: FC<Props> = () => {
         handleOnCapturePress();
     }
 
+    const hideImageOptionModal = () => {
+        setShowImageOptions(false);
+    }
+
+    const scanLocalFiles = async () => {
+        return await getLocalImages();
+    }
+
+    const handleOnImageRemove = async () => {
+        hideImageOptionModal();
+    }
+
+    useEffect(() => {
+        scanLocalFiles()
+            .then(res => {
+                if (!res.length)
+                    setIsFirstVisit(true)
+                else
+                    setImages(res)
+            })
+            .finally(() => {
+                setIsReady(true);
+            });
+    }, [])
+
+    if (!isReady)
+        return (
+            <Page style={styles.busyContainer}>
+                <AppText>Loading...</AppText>
+            </Page>
+        )
+
+    if (isFirstVisit)
+        return (
+            <>
+                <Page style={styles.container}>
+                    <FirstVisit onSelectPress={handleOnSelectPress} onCapturePress={handleOnCapturePress} />
+                </Page>
+                <NeverAskPermissionAlert
+                    visible={showPermissionAlert}
+                    onClose={hidePermissionModal}
+                    buttonProps={{
+                        titleOne: "Close",
+                        titleTwo: isNeverAsk ? "Open Settings" : "Ask Me Again",
+                        onPressOne: hidePermissionModal,
+                        onPressTwo: isNeverAsk ? handleOnOpenSettings : handleOnAskPermissionAgain
+                    }}
+                />
+            </>
+        )
+
     return (
         <>
             <Page style={styles.container}>
-                <FirstVisit onSelectPress={handleOnSelectPress} onCapturePress={handleOnCapturePress} />
+                <Pressable style={styles.addButton} >
+                    <Icon name='plus' color={"white"} size={24} />
+                </Pressable>
+                <AppText style={styles.title}>Previous Edits</AppText>
+                <GridView
+                    col={2}
+                    renderItem={item => (
+                        <Pressable onLongPress={() => setShowImageOptions(true)} style={styles.imageContainer} >
+                            <Image
+                                source={{ uri: item.path }}
+                                style={styles.image}
+                            />
+                        </Pressable>
+                    )}
+                    data={images}
+                />
             </Page>
-            <NeverAskPermissionAlert
-                visible={showPermissionAlert}
-                onClose={hidePermissionModal}
-                buttonProps={{
-                    titleOne: "Close",
-                    titleTwo: isNeverAsk ? "Open Settings" : "Ask Me Again",
-                    onPressOne: hidePermissionModal,
-                    onPressTwo: isNeverAsk ? handleOnOpenSettings : handleOnAskPermissionAgain
-                }}
-            />
+            <AppModal visible={showImageOptions} onClose={hideImageOptionModal}>
+                {/* <ImageOptions /> */}
+                <ConfirmOptions
+                    regularBtnTitle='Cancel'
+                    destructiveBtnTitle='Confirm'
+                    onRegularBtnPress={hideImageOptionModal}
+                    onDestructiveBtnPress={handleOnImageRemove}
+                    title='r u sure?' />
+            </AppModal>
         </>
     )
 }
 
+
 const styles = StyleSheet.create({
-    container: {}
+    container: {
+        padding: 10,
+        gap: 10,
+        position: "relative"
+    },
+    busyContainer: {
+        justifyContent: "center",
+        alignItems: "center"
+    },
+    imageContainer: {
+        flex: 1
+    },
+    image: {
+        flex: 1
+    },
+    title: {
+        fontSize: 22,
+        fontWeight: "600"
+    },
+    addButton: {
+        position: "absolute",
+        bottom: 20,
+        right: 20,
+        zIndex: 1,
+        width: 45,
+        height: 45,
+        borderRadius: 8,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "#40423f"
+    }
 })
 
 export default Home;
