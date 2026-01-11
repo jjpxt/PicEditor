@@ -1,10 +1,14 @@
 import { FC } from 'react';
-import { Image, StyleSheet, View } from 'react-native';
+import { Image, Pressable, StyleSheet, View } from 'react-native';
 import AppText from '../UI/AppText';
+import Icon from "@react-native-vector-icons/entypo"
 
-interface Props { }
+interface Props {
+    onCapturePress?(): void
+    onSelectPress?(): void
+}
 
-const FirstVisit: FC<Props> = () => {
+const FirstVisit: FC<Props> = ({ onCapturePress, onSelectPress }) => {
     return (
         <View style={styles.container}>
             <View style={styles.imageContainer}>
@@ -19,10 +23,19 @@ const FirstVisit: FC<Props> = () => {
                         Start editing your first image
                     </AppText>
                     <AppText style={styles.subTitle}>
-                        Pick a image from your gallery or capture a new one to begin
+                        Pick a image from your gallery or capture a new one to begin!
                     </AppText>
                 </View>
-                <View></View>
+                <View style={styles.buttonContainer}>
+                    <Pressable onPress={onCapturePress} style={styles.button}>
+                        <Icon size={20} name='camera' color="white" />
+                        <AppText style={styles.buttonTitle}>Capture</AppText>
+                    </Pressable>
+                    <Pressable onPress={onSelectPress} style={styles.button}>
+                        <Icon size={20} name='images' color="white" />
+                        <AppText style={styles.buttonTitle}>Select</AppText>
+                    </Pressable>
+                </View>
             </View>
         </View>
     );
@@ -31,22 +44,45 @@ const FirstVisit: FC<Props> = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 20,
-        gap: 20
+        gap: 20,
+        padding: 20
     },
-    imageContainer: {},
+    imageContainer: {
+        // flex: 1
+    },
     heroImage: {
         margin: "auto"
     },
-    bottomContainer: {},
+    bottomContainer: {
+        gap: 40
+    },
     title: {
-        fontSize: 26,
-        textAlign: "left"
+        fontSize: 28,
+        textAlign: "center"
     },
     subTitle: {
-        fontSize: 20,
-        textAlign: "left",
-        paddingTop: 5
+        fontSize: 24,
+        paddingTop: 5,
+        textAlign: "center"
+    },
+    buttonContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: 20
+    },
+    button: {
+        gap: 1,
+        flex: 1,
+        height: 45,
+        borderRadius: 8,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "#40423f"
+    },
+    buttonTitle: {
+        fontSize: 18
     }
 });
 
