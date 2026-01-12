@@ -57,3 +57,11 @@ export const getLocalImages = async (): Promise<LocalImage[]> => {
         }
     })
 }
+
+export const removeFile = async (path: string) => {
+    try {
+        await rnfs.unlink(path)
+    } catch (error) {
+        console.log("Error removing file: ", error)
+    }
+}

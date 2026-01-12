@@ -5,12 +5,12 @@ import FirstVisit from '../components/FirstVisit';
 import { requestImageReadWritePermission } from '../utils/permissions';
 import NeverAskPermissionAlert from '../components/NeverAskPermissionAlert';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
-import { getLocalImages, LocalImage, saveImagesToLocalDir } from '../utils/file-handler';
+import { getLocalImages, LocalImage, removeFile, saveImagesToLocalDir } from '../utils/file-handler';
 import AppText from '../UI/AppText';
 import GridView from '../UI/GridView';
 import Icon from "@react-native-vector-icons/entypo"
 import AppModal from '../components/AppModal';
-// import ImageOptions from '../components/ImageOptions';
+import ImageOptions from '../components/ImageOptions';
 import ConfirmOptions from '../components/ConfirmOptions';
 
 interface Props { }
@@ -22,7 +22,9 @@ const Home: FC<Props> = () => {
     const [isNeverAsk, setIsNeverAsk] = useState(false);
     const [isFirstVisit, setIsFirstVisit] = useState(false);
     const [showImageOptions, setShowImageOptions] = useState(false);
+    const [confirmDelete, setConfirmDelete] = useState(false);
     const [isReady, setIsReady] = useState(false);
+    const [selectedImage, setSelectedImage] = useState<string | null>(null)
     const [images, setImages] = useState<LocalImage[]>([])
 
     const handleOnCapturePress = async () => {
@@ -92,24 +94,31 @@ const Home: FC<Props> = () => {
 
     const hideImageOptionModal = () => {
         setShowImageOptions(false);
+        setSelectedImage(null)
+        setInterval(() => {
+            setConfirmDelete(false);
+        }, 100);
     }
 
-    const scanLocalFiles = async () => {
-        return await getLocalImages();
-    }
-
-    const handleOnImageRemove = async () => {
-        hideImageOptionModal();
-    }
-
-    useEffect(() => {
-        scanLocalFiles()
+    const handleLocalFilesScan = async () => {
+        return await getLocalImages()
             .then(res => {
                 if (!res.length)
                     setIsFirstVisit(true)
                 else
                     setImages(res)
             })
+    }
+
+    const handleOnImageRemove = async () => {
+        if (!selectedImage) return;
+        await removeFile(selectedImage);
+        await handleLocalFilesScan();
+        hideImageOptionModal();
+    }
+
+    useEffect(() => {
+        handleLocalFilesScan()
             .finally(() => {
                 setIsReady(true);
             });
@@ -151,7 +160,11 @@ const Home: FC<Props> = () => {
                 <GridView
                     col={2}
                     renderItem={item => (
-                        <Pressable onLongPress={() => setShowImageOptions(true)} style={styles.imageContainer} >
+                        <Pressable onLongPress={() => {
+                            setSelectedImage(item.path)
+                            setShowImageOptions(true)
+                        }}
+                            style={styles.imageContainer} >
                             <Image
                                 source={{ uri: item.path }}
                                 style={styles.image}
@@ -162,13 +175,16 @@ const Home: FC<Props> = () => {
                 />
             </Page>
             <AppModal visible={showImageOptions} onClose={hideImageOptionModal}>
-                {/* <ImageOptions /> */}
-                <ConfirmOptions
-                    regularBtnTitle='Cancel'
-                    destructiveBtnTitle='Confirm'
-                    onRegularBtnPress={hideImageOptionModal}
-                    onDestructiveBtnPress={handleOnImageRemove}
-                    title='r u sure?' />
+                {!confirmDelete ? (
+                    <ImageOptions onDeletePress={() => setConfirmDelete(true)} />
+                ) : (
+                    <ConfirmOptions
+                        regularBtnTitle='Cancel'
+                        destructiveBtnTitle='Confirm'
+                        onRegularBtnPress={hideImageOptionModal}
+                        onDestructiveBtnPress={handleOnImageRemove}
+                        title='r u sure?' />
+                )}
             </AppModal>
         </>
     )

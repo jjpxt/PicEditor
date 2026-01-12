@@ -16,7 +16,7 @@ const AppModal: FC<Props> = ({ visible = false, children, onClose }) => {
             transparent
             onRequestClose={onClose}
             visible={visible}
-            animationType="fade">
+            animationType="none">
             <Page background="rgba(0,0,0,0.5)">
                 <Pressable
                     style={styles.overlay}
