@@ -1,12 +1,12 @@
 import { StatusBar, } from "react-native";
-import Home from "./app/views/Home";
+import Navigation from "./app/navigation";
 
 // NPM RUN ANDROID
 
 const App = () => {
   return (<>
     <StatusBar backgroundColor="#181c14" />
-    <Home />
+    <Navigation />
   </>
   )
 };

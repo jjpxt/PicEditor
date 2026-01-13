@@ -4,7 +4,7 @@ import Page from '../UI/Page';
 import FirstVisit from '../components/FirstVisit';
 import { requestImageReadWritePermission } from '../utils/permissions';
 import NeverAskPermissionAlert from '../components/NeverAskPermissionAlert';
-import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
+import { ImagePickerResponse, launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import { getLocalImages, LocalImage, removeFile, saveImagesToLocalDir } from '../utils/file-handler';
 import AppText from '../UI/AppText';
 import GridView from '../UI/GridView';
@@ -12,6 +12,8 @@ import Icon from "@react-native-vector-icons/entypo"
 import AppModal from '../components/AppModal';
 import ImageOptions from '../components/ImageOptions';
 import ConfirmOptions from '../components/ConfirmOptions';
+import { NavigationProp, useNavigation } from '@react-navigation/native';
+import { StackNavigationProps } from '../navigation';
 
 interface Props { }
 
@@ -26,6 +28,23 @@ const Home: FC<Props> = () => {
     const [isReady, setIsReady] = useState(false);
     const [selectedImage, setSelectedImage] = useState<string | null>(null)
     const [images, setImages] = useState<LocalImage[]>([])
+    const navigation = useNavigation<NavigationProp<StackNavigationProps>>()
+
+    const navigateToEditingCanvas = (imageUri: string) => {
+        navigation.navigate("EditingCanvas", { image: imageUri })
+    }
+
+    const handleAfterImageSelection = async (data: ImagePickerResponse) => {
+        const { assets, didCancel } = data;
+
+        if (!didCancel && assets) {
+            const asset = assets[0]
+            if (asset.uri) {
+                await saveImagesToLocalDir(asset.uri)
+                navigateToEditingCanvas(asset.uri)
+            }
+        }
+    }
 
     const handleOnCapturePress = async () => {
         try {
@@ -40,13 +59,11 @@ const Home: FC<Props> = () => {
                 }
             }
 
-            const { didCancel,/*errorMessage,*/ assets } = await launchCamera({
+            const res = await launchCamera({
                 mediaType: "photo"
             })
 
-            if (!didCancel && assets) {
-                console.log(assets)
-            }
+            handleAfterImageSelection(res)
 
         } catch (error) {
             console.log(error)
@@ -66,15 +83,11 @@ const Home: FC<Props> = () => {
                 }
             }
 
-            const { didCancel, /*errorMessage*/ assets } = await launchImageLibrary({
+            const res = await launchImageLibrary({
                 mediaType: "photo"
             })
 
-            if (!didCancel && assets) {
-                const asset = assets[0];
-
-                asset.uri ? await saveImagesToLocalDir(asset.uri) : null;
-            }
+            handleAfterImageSelection(res)
 
         } catch (error) {
             console.log(error)
@@ -164,6 +177,7 @@ const Home: FC<Props> = () => {
                             setSelectedImage(item.path)
                             setShowImageOptions(true)
                         }}
+                            onPress={() => navigateToEditingCanvas(item.path)}
                             style={styles.imageContainer} >
                             <Image
                                 source={{ uri: item.path }}
