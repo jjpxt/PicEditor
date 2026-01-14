@@ -29,11 +29,11 @@ const FirstVisit: FC<Props> = ({ onCapturePress, onSelectPress }) => {
                 <View style={styles.buttonContainer}>
                     <Pressable onPress={onCapturePress} style={styles.button}>
                         <Icon size={20} name='camera' color="white" />
-                        <AppText style={styles.buttonTitle}>Capture</AppText>
+                        <AppText style={styles.buttonTitle}> Capture</AppText>
                     </Pressable>
                     <Pressable onPress={onSelectPress} style={styles.button}>
                         <Icon size={20} name='images' color="white" />
-                        <AppText style={styles.buttonTitle}>Select</AppText>
+                        <AppText style={styles.buttonTitle}> Select</AppText>
                     </Pressable>
                 </View>
             </View>
