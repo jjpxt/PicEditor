@@ -1,5 +1,6 @@
 import { Platform } from "react-native"
 import * as rnfs from "@dr.pogodin/react-native-fs"
+import { CameraRoll } from "@react-native-camera-roll/camera-roll";
 
 const androidLocalImageDir = `${rnfs.ExternalDirectoryPath}/Pictures`;
 
@@ -15,7 +16,7 @@ export const saveImagesToLocalDir = async (uri: string) => {
 
             !isDirExists ? await rnfs.mkdir(DocumentDirectoryPath) : null;
 
-            filePath = `${DocumentDirectoryPath}/${uniqueFileName};`
+            filePath = `${DocumentDirectoryPath}/${uniqueFileName}`;
 
         }
 
@@ -64,4 +65,43 @@ export const removeFile = async (path: string) => {
     } catch (error) {
         console.log("Error removing file: ", error)
     }
+}
+
+// const saveBase64ImageToIos = async (base64data: string) => {
+//     const uniqueFileName = `Pic Editor-${Date.now()}.jpg`
+//     let filePath = `${rnfs.CachesDirectoryPath}/${uniqueFileName}`;
+
+//     await rnfs.writeFile(filePath, base64data, 'base64');
+
+//     if (!await rnfs.exists(filePath)) return console.log("file doesn't exists")
+
+//     if (!filePath.startsWith('file:'))
+//         filePath = `file://${filePath}`
+
+//     await CameraRoll.saveAsset(filePath,{type:'photo'});
+//     await rnfs.unlink(filePath);
+//     // para usuarios ios é necessário instalar @react-native-camera-roll/camera-roll
+// }
+
+const saveBase64ImageToAndroid = async (base64data: string) => {
+    const uniqueFileName = `Pic Editor-${Date.now()}.jpg`
+    let filePath = `${rnfs.CachesDirectoryPath}/${uniqueFileName}`;
+
+    if (!filePath.startsWith('file:')) {
+        filePath = `file://${filePath}`
+    }
+
+    await rnfs.writeFile(filePath, base64data, 'base64');
+    await CameraRoll.saveAsset(filePath, { type: 'photo' });
+    await rnfs.unlink(filePath);
+}
+
+export const saveBase64ImageToDevice = (content: string) => {
+    const base64Data = content.replace(/^data:image\/[a-zA-Z0-9.+-]+;base64,/, '');
+
+    if (Platform.OS === "android")
+        saveBase64ImageToAndroid(base64Data);
+
+    // if (Platform.OS === "ios")
+    //     saveBase64ImageToIos(base64Data);
 }
