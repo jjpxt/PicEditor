@@ -8,7 +8,7 @@ import Icon from "@react-native-vector-icons/entypo"
 import MaterialIcon from "@react-native-vector-icons/material-icons"
 import AppText from '../UI/AppText';
 import { saveBase64ImageToDevice } from '../utils/file-handler';
-import { useNavigation } from '@react-navigation/native';
+import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { calculateImageSizeForScreen } from '../utils/helper';
 
 
@@ -31,7 +31,9 @@ const tools = [
         icon: 'photo-filter',
         task: 'filter'
     }
-] as const
+] as const;
+
+type EditTask = typeof tools[number]['task']
 
 const { width } = Dimensions.get('window');
 const padding = 10;
@@ -39,7 +41,7 @@ const canvasSize = width - padding * 2
 const EditingCanvas: FC<Props> = ({ route }) => {
     const canvasRef = useCanvasRef();
     const image = useImage(route.params.image);
-    const { canGoBack, goBack } = useNavigation();
+    const { canGoBack, goBack, navigate } = useNavigation<NavigationProp<StackNavigationProps>>();
 
     const handleOnExportPress = () => {
         const imagePress = canvasRef.current?.makeImageSnapshot();
@@ -49,6 +51,16 @@ const EditingCanvas: FC<Props> = ({ route }) => {
 
     const handleOnClose = () => {
         canGoBack() ? goBack() : null
+    }
+
+    const handleOnToolPress = (task: EditTask) => {
+        switch (task) {
+            case 'crop':
+                navigate('ImageCropper', { src: route.params.image })
+                break;
+            default:
+                return;
+        }
     }
 
     const actualImageWidth = image?.width() || 0;
@@ -81,7 +93,10 @@ const EditingCanvas: FC<Props> = ({ route }) => {
                 <View style={styles.toolsContainer}>
                     {tools.map(item => {
                         return (
-                            <Pressable key={item.task} style={styles.editOptionSelector}>
+                            <Pressable
+                                onPress={() => handleOnToolPress(item.task)}
+                                key={item.task}
+                                style={styles.editOptionSelector}>
                                 <MaterialIcon name={item.icon} color="white" size={24} />
                             </Pressable>
                         )
