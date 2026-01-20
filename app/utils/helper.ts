@@ -1,4 +1,4 @@
-import { Platform } from "react-native"
+import { Image, Platform } from "react-native"
 
 const VERSION_15_API_LEVEL = 35;
 
@@ -48,4 +48,19 @@ export const calculateImageSizeForScreen = (
         width: finalWidth,
         scale
     }
+}
+
+export const loadAndCalculateImageSize = async (
+    src: string,
+    desiredWidth: number,
+    desiredHeight: number
+): Promise<ImageSizeResult> => {
+    const { height, width } = await Image.getSize(src)
+
+    return calculateImageSizeForScreen(
+        width,
+        height,
+        desiredHeight,
+        desiredWidth
+    )
 }

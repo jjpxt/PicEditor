@@ -6,14 +6,15 @@ interface Props { }
 const Nome: FC<Props> = () => {
     return (
         <View style={styles.container}>
-            a
-        </View>
 
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
-    container: {}
+    container: {
+
+    }
 });
 
 export default Nome;
